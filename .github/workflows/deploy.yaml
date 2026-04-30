@@ -1,0 +1,53 @@
+name: Deploy to Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create deployment package
+        run: zip -r deploy.zip app.js package.json package-lock.json README.md
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set version label
+        id: version
+        run: echo "label=${GITHUB_SHA::7}-$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Upload bundle to S3
+        run: aws s3 cp deploy.zip s3://${{ secrets.S3_BUCKET }}/deploy-${{ steps.version.outputs.label }}.zip
+
+      - name: Create Elastic Beanstalk application version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "${{ secrets.EB_APPLICATION_NAME }}" \
+            --version-label "${{ steps.version.outputs.label }}" \
+            --source-bundle S3Bucket="${{ secrets.S3_BUCKET }}",S3Key="deploy-${{ steps.version.outputs.label }}.zip"
+
+      - name: Deploy application version to environment
+        run: |
+          aws elasticbeanstalk update-environment \
+            --application-name "${{ secrets.EB_APPLICATION_NAME }}" \
+            --environment-name "${{ secrets.EB_ENVIRONMENT_NAME }}" \
+            --version-label "${{ steps.version.outputs.label }}"
