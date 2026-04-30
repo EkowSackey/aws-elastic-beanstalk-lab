@@ -4,7 +4,7 @@ const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 const app = express();
 
 const PORT = process.env.PORT || 8080;
-const APP_VERSION = process.env.APP_VERSION || 'v1';
+const APP_VERSION = process.env.APP_VERSION || 'v2.0.0';
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME || '';
 
 app.get('/', (req, res) => {
