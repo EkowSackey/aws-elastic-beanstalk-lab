@@ -11,7 +11,7 @@ app.get('/', (req, res) => {
   res.send(`
     <html>
       <head>
-        <title>Elastic Beanstalk Node Lab</title>
+        <title>Elastic Beanstalk Node Lab-- Lab Review</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
           .card { background: white; padding: 24px; border-radius: 8px; max-width: 700px; }
